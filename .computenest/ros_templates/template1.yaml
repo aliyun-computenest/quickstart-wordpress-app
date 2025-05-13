@@ -114,8 +114,8 @@ Parameters:
   EcsInstanceType:
     Type: String
     Label:
-      en: Instance Type
-      zh-cn: 实例类型
+      en: ECS Instance Type
+      zh-cn: ECS实例类型
     AssociationProperty: ALIYUN::ECS::Instance::InstanceType
     AssociationPropertyMetadata:
       ZoneId: ${ZoneId}
@@ -227,8 +227,8 @@ Parameters:
   DBInstanceClass:
     Type: String
     Label:
-      en: Instance Class
-      zh-cn: 实例规格
+      en: RDS Instance Class
+      zh-cn: RDS实例规格
     AssociationProperty: ALIYUN::RDS::Instance::InstanceType
     AssociationPropertyMetadata:
       ZoneId: ${ZoneId}
@@ -576,7 +576,6 @@ Metadata:
     QuickDeployConfig:
       PackageFields:
         - Key: EcsInstanceType
-        - Key: DBInstanceClass
         - Key: SystemDiskCategory
           Label:
             zh-cn: 系统盘
@@ -587,6 +586,7 @@ Metadata:
             zh-cn: 公网带宽
             en: Internet Charge Type
           Value: '${InternetChargeType } / ${InternetMaxBandwidthOut} Mbps'
+        - Key: DBInstanceClass
         - Key: PayType
           Label:
             zh-cn: 付费类型
