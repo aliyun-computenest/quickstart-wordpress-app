@@ -608,7 +608,7 @@ Metadata:
             PayPeriodUnit: Month
             PayPeriod: 12
             PayType: PrePaid
-            DBInstanceClass: rds.mysql.t1.small
+            DBInstanceClass: mysql.n2m.medium.2c
           OrderList:
             - EcsInstanceType
             - SystemDiskCategory
@@ -631,7 +631,7 @@ Metadata:
             PayPeriodUnit: Month
             PayPeriod: 12
             PayType: PostPaid
-            DBInstanceClass: rds.mysql.t1.small
+            DBInstanceClass: mysql.n2m.medium.2c
           OrderList:
             - EcsInstanceType
             - SystemDiskCategory
