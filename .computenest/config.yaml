@@ -1,6 +1,8 @@
 Service:
   DeployType: ros
   DeployMetadata:
+    SupplierDeployMetadata:
+      DeployTimeout: 7200
     TemplateConfigs:
       - Name: 模板1
         Url: ros_templates/template1.yaml
