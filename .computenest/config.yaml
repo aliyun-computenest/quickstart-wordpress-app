@@ -1,0 +1,36 @@
+Service:
+  DeployType: ros
+  DeployMetadata:
+    TemplateConfigs:
+      - Name: 模板1
+        Url: ros_templates/template1.yaml
+        AllowedRegions:
+          - cn-beijing
+          - cn-hangzhou
+          - cn-heyuan
+        PredefinedParameters: []
+        DeployScene: ECS
+        OutputConfigs:
+          - OutputKey: __biubiu__
+            EnableWebProxy: false
+    NetworkMetadata:
+      EnablePrivateVpcConnection: false
+      EnableReversePrivateVpcConnection: false
+    ServiceInstanceNameRule:
+      UseDefaultValue: false
+  OperationMetadata:
+    SupportBackup: false
+    PrometheusConfigMap:
+      模板1:
+        EnablePrometheus: false
+  ServiceType: private
+  ServiceInfo:
+    - Agreements: []
+      Image: resources/icons/service_logo.png
+      Locale: zh-CN
+      Name: Wordpress博客网站
+      ShortDescription: 在阿里云快速部署博客网站，并将网站服务快速应用到微信、支付宝小程序。
+      Softwares: []
+  ShareType: Public
+  ApprovalType: Manual
+Artifact: {}

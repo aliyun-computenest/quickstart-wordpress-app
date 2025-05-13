@@ -1,0 +1,672 @@
+ROSTemplateFormatVersion: '2015-09-01'
+Conditions:
+  CreateVpcConditions:
+    Fn::Equals:
+      - NewVPC
+      - Ref: VpcOption
+Parameters:
+  VpcOption:
+    Type: String
+    AllowedValues:
+      - NewVPC
+      - ExistingVPC
+    AssociationPropertyMetadata:
+      ValueLabelMapping:
+        NewVPC:
+          zh-cn: 新建专有网络
+          en: New VPC
+        ExistingVPC:
+          zh-cn: 已有专有网络
+          en: Existing VPC
+    Label:
+      en: Select Existing or New VPC
+      zh-cn: 选择已有/新建的专有网络
+    Required: true
+    Default: NewVPC
+  VpcCidrBlock:
+    Type: String
+    Label:
+      en: VPC CIDR IPv4 Block
+      zh-cn: 专有网络IPv4网段
+    Description:
+      zh-cn: VPC的ip地址段范围，<br>您可以使用以下的ip地址段或其子网:<br><font color='green'>[10.0.0.0/8]</font><br><font color='green'>[172.16.0.0/12]</font><br><font color='green'>[192.168.0.0/16]</font>
+      en: 'The ip address range of the VPC in the CidrBlock form; <br>You can use the following ip address ranges and their subnets: <br><font color=''green''>[10.0.0.0/8]</font><br><font color=''green''>[172.16.0.0/12]</font><br><font color=''green''>[192.168.0.0/16]</font>'
+    Default: 192.168.0.0/16
+    Required:
+      Fn::Equals:
+        - NewVPC
+        - ${VpcOption}
+    AssociationProperty: ALIYUN::VPC::VPC::CidrBlock
+    AssociationPropertyMetadata:
+      Visible:
+        Condition:
+          Fn::Equals:
+            - NewVPC
+            - ${VpcOption}
+  VSwitchCidrBlock:
+    Type: String
+    Label:
+      en: VSwitch CIDR Block
+      zh-cn: 交换机子网网段
+    Description:
+      zh-cn: 必须属于VPC的子网段。
+      en: Must belong to the subnet segment of VPC.
+    Default: 192.168.1.0/24
+    Required:
+      Fn::Equals:
+        - NewVPC
+        - ${VpcOption}
+    AssociationProperty: ALIYUN::VPC::VSwitch::CidrBlock
+    AssociationPropertyMetadata:
+      VpcCidrBlock: VpcCidrBlock
+      Visible:
+        Condition:
+          Fn::Equals:
+            - NewVPC
+            - ${VpcOption}
+  PayType:
+    Type: String
+    Label:
+      en: ECS Instance Charge Type
+      zh-cn: 付费类型
+    Default: PrePaid
+    AllowedValues:
+      - PrePaid
+      - PostPaid
+    AssociationProperty: ChargeType
+    AssociationPropertyMetadata:
+      LocaleKey: InstanceChargeType
+  PayPeriodUnit:
+    Type: String
+    Label:
+      en: Pay Period Unit
+      zh-cn: 购买资源时长周期
+    Default: Month
+    AllowedValues:
+      - Month
+    AssociationProperty: PayPeriodUnit
+    AssociationPropertyMetadata:
+      ValueLabelMapping:
+        Month: 月
+      Visible:
+        Condition:
+          Fn::Not:
+            Fn::Equals:
+              - ${PayType}
+              - PostPaid
+  PayPeriod:
+    Type: Number
+    Label:
+      en: Period
+      zh-cn: 购买资源时长
+    Default: 12
+    AllowedValues:
+      - 3
+      - 12
+    AssociationProperty: PayPeriod
+    AssociationPropertyMetadata:
+      Visible:
+        Condition:
+          Fn::Not:
+            Fn::Equals:
+              - ${PayType}
+              - PostPaid
+  EcsInstanceType:
+    Type: String
+    Label:
+      en: Instance Type
+      zh-cn: 实例类型
+    AssociationProperty: ALIYUN::ECS::Instance::InstanceType
+    AssociationPropertyMetadata:
+      ZoneId: ${ZoneId}
+      InstanceChargeType: ${PayType}
+  SystemDiskCategory:
+    Type: String
+    AllowedValues:
+      - cloud_efficiency
+      - cloud_essd
+      - cloud_essd_entry
+    Label:
+      en: System Disk Category
+      zh-cn: 系统盘类型
+    AssociationPropertyMetadata:
+      LocaleKey: DiskCategory
+  SystemDiskSize:
+    Type: Number
+    Label:
+      zh-cn: 系统盘空间 (GB)
+      en: System Disk Space (GB)
+    MinValue: 40
+    MaxValue: 2000
+  InternetChargeType:
+    Type: String
+    Label:
+      zh-cn: 带宽付费类型
+      en: Internet Charge Type
+    AssociationPropertyMetadata:
+      ValueLabelMapping:
+        PayByTraffic: 按流量计费
+        PayByBandwidth: 按固定带宽计费
+    AllowedValues:
+      - PayByBandwidth
+      - PayByTraffic
+  InternetMaxBandwidthOut:
+    Type: Number
+    Label:
+      zh-cn: 公网带宽 (Mbps)
+      en: Internet Max Bandwidth Out (Mbps)
+    MinValue: 1
+    MaxValue: 100
+  InstancePassword:
+    NoEcho: true
+    Type: String
+    Description:
+      en: Server login password, Length 8-30, must contain three(Capital letters, lowercase letters, numbers, ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol in)
+      zh-cn: 服务器登录密码,长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）
+    AllowedPattern: '^[a-zA-Z0-9-\(\)\`\~\!\@\#\$\%\^\&\*\_\-\+\=\|\{\}\[\]\:\;\<\>\,\.\?\/]*$'
+    Label:
+      en: Instance Password
+      zh-cn: 实例密码
+    ConstraintDescription:
+      en: Length 8-30, must contain three(Capital letters, lowercase letters, numbers, ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ Special symbol in)
+      zh-cn: 长度8-30，必须包含三项（大写字母、小写字母、数字、 ()`~!@#$%^&*_-+=|{}[]:;'<>,.?/ 中的特殊符号）
+    MinLength: 8
+    MaxLength: 30
+    AssociationProperty: ALIYUN::ECS::Instance::Password
+    AssociationPropertyMetadata:
+      Random: true
+  ZoneId:
+    Type: String
+    Label:
+      en: Zone ID
+      zh-cn: 可用区ID
+    AssociationProperty: ALIYUN::ECS::Instance::ZoneId
+    AssociationPropertyMetadata:
+      DefaultValueStrategy: random
+      InstanceChargeType: ${PayType}
+      SystemDiskCategory: cloud_essd
+      InstanceType: ${EcsInstanceType}
+  VpcId:
+    Type: String
+    Label:
+      en: VPC ID
+      zh-cn: 专有网络VPC实例ID
+    AssociationProperty: 'ALIYUN::ECS::VPC::VPCId'
+    Required:
+      Fn::Equals:
+        - ExistingVPC
+        - ${VpcOption}
+    Default: ''
+    AssociationPropertyMetadata:
+      AutoSelectFirst: true
+      Visible:
+        Condition:
+          Fn::Equals:
+            - ExistingVPC
+            - ${VpcOption}
+  VSwitchId:
+    Type: String
+    Label:
+      en: VSwitch ID
+      zh-cn: 交换机实例ID
+    Default: ''
+    AssociationProperty: 'ALIYUN::ECS::VSwitch::VSwitchId'
+    Required:
+      Fn::Equals:
+        - ExistingVPC
+        - ${VpcOption}
+    AssociationPropertyMetadata:
+      AutoSelectFirst: true
+      VpcId: ${VpcId}
+      ZoneId: ${ZoneId}
+      Visible:
+        Condition:
+          Fn::Equals:
+            - ExistingVPC
+            - ${VpcOption}
+  DBInstanceClass:
+    Type: String
+    Label:
+      en: Instance Class
+      zh-cn: 实例规格
+    AssociationProperty: ALIYUN::RDS::Instance::InstanceType
+    AssociationPropertyMetadata:
+      ZoneId: ${ZoneId}
+      EngineVersion: '8.0'
+      Engine: MySQL
+      Category: HighAvailability
+      DBInstanceStorageType: cloud_essd
+      CommodityCode: bards
+  DBName:
+    Type: String
+    Label:
+      zh-cn: 数据库名称
+      en: DB Name
+    Description:
+      zh-cn: 数据库名称，由小写字母、数字及特殊字符（-_）组成，以字母开头，字母或数字结尾，最多64个字符。
+      en: Database name, consisting of lowercase letters, Numbers, and special characters (-_), starting with letters, ending with letters or Numbers, up to 64 characters.
+    Default: wordpress
+  DBUser:
+    Type: String
+    Label:
+      en: RDS DB Username
+      zh-cn: RDS数据库账号
+    ConstraintDescription:
+      en: Consist of 2 to 16 characters of lowercase letters, underline. Must begin with a letter and be end with an alphanumeric character.
+      zh-cn: 由 2 到 16 个小写字母组成，下划线。必须以字母开头，以字母数字字符结尾。
+    Default: dbuser
+    MinLength: 2
+    MaxLength: 16
+  DBPassword:
+    Type: String
+    Label:
+      en: RDS Database Password
+      zh-cn: RDS数据库密码
+    Description:
+      en: |-
+        The password must be 8 to 32 characters in length. <br>
+        It must contain the following character types: uppercase letters, lowercase letters, digits, and special characters. <br>
+        Special characters include <span style="background:#E7E9EB;"><b>!@#$%^&*()_+-=</b></span>.<br>
+        <b>If you repeatedly provision in this tutorial on the same ECS instance, make sure that the MySQL database password is exactly the same as the password set when the template was executed for the first time. Otherwise, the result of provisioning is unavailable.</b>
+      zh-cn: 长度为8~32位，需包含大写字母、小写字母、特殊字符、数字的任意三种，允许的特殊字符包括<span style="background:#E7E9EB;"><b>!@#$%^&*()_+-=</b></span>。<br>
+    AssociationProperty: ALIYUN::RDS::Instance::AccountPassword
+    NoEcho: true
+  WordPressUserName:
+    Type: String
+    Label:
+      en: WordPress User Name
+      zh-cn: WordPress用户名
+    Default: admin
+  WordPressUserPassword:
+    Type: String
+    Label:
+      en: WordPress User Password
+      zh-cn: WordPress用户密码
+    NoEcho: true
+  WordPressUserEmail:
+    Type: String
+    Label:
+      en: WordPress User Email
+      zh-cn: WordPress用户邮箱
+    Default: admin@example.com
+Resources:
+  # 新建vpc
+  EcsVpc:
+    Type: ALIYUN::ECS::VPC
+    Condition: CreateVpcConditions
+    Properties:
+      VpcName:
+        Ref: ALIYUN::StackName
+      CidrBlock:
+        Ref: VpcCidrBlock
+  # 新建vswitch
+  EcsVSwitch:
+    Condition: CreateVpcConditions
+    Type: ALIYUN::ECS::VSwitch
+    Properties:
+      VSwitchName:
+        Ref: ALIYUN::StackName
+      VpcId:
+        Ref: EcsVpc
+      ZoneId:
+        Ref: ZoneId
+      CidrBlock:
+        Ref: VSwitchCidrBlock
+  SecurityGroup:
+    Type: ALIYUN::ECS::SecurityGroup
+    Properties:
+      SecurityGroupName:
+        Ref: ALIYUN::StackName
+      VpcId:
+        Fn::If:
+          - CreateVpcConditions
+          - Ref: EcsVpc
+          - Ref: VpcId
+      SecurityGroupIngress:
+        - PortRange: 80/80
+          Priority: 1
+          SourceCidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          NicType: internet
+        - PortRange: 22/22
+          Priority: 1
+          SourceCidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          NicType: internet
+  EcsInstance:
+    Type: ALIYUN::ECS::InstanceGroup
+    Properties:
+      # 付费类型
+      InstanceChargeType:
+        Ref: PayType
+      PeriodUnit:
+        Ref: PayPeriodUnit
+      Period:
+        Ref: PayPeriod
+      VpcId:
+        Fn::If:
+          - CreateVpcConditions
+          - Ref: EcsVpc
+          - Ref: VpcId
+      VSwitchId:
+        Fn::If:
+          - CreateVpcConditions
+          - Ref: EcsVSwitch
+          - Ref: VSwitchId
+      ZoneId:
+        Ref: ZoneId
+      SecurityGroupId:
+        Ref: SecurityGroup
+      ImageId: centos_7_9
+      Password:
+        Ref: InstancePassword
+      SystemDiskCategory:
+        Ref: SystemDiskCategory
+      SystemDiskSize:
+        Ref: SystemDiskSize
+      MaxAmount: 1
+      InstanceType:
+        Ref: EcsInstanceType
+      InternetMaxBandwidthOut:
+        Ref: InternetMaxBandwidthOut
+      InternetChargeType:
+        Ref: InternetChargeType
+      IoOptimized: optimized
+  InstallWordPress:
+    Type: ALIYUN::ECS::RunCommand
+    Properties:
+      Type: RunShellScript
+      Sync: true
+      Timeout: 2400
+      CommandContent:
+        Fn::Sub:
+          - |-
+            #!/bin/bash
+
+            cat << EOF >> ~/.bash_profile
+            export DB_NAME=${db_name}
+            export DB_USERNAME=${db_username}
+            export DB_PASSWORD=${db_password}
+            export DB_CONNECTION=${db_connection}
+            export ROS_DEPLOY=true
+            EOF
+
+            source ~/.bash_profile
+
+            curl -fsSL https://static-aliyun-doc.oss-cn-hangzhou.aliyuncs.com/install-script/develop-your-wechat-mini-program-in-10-minutes/install.sh|bash
+
+
+            ## 调整db连接配置
+            sed -i 's/localhost/${db_connection}/' /var/www/html/wp-config.php
+            sed -i 's/username_here/${db_username}/' /var/www/html/wp-config.php
+            sed -i 's/password_here/${db_password}/' /var/www/html/wp-config.php
+            sed -i 's/database_name_here/${db_name}/' /var/www/html/wp-config.php
+
+            cd /var/www/html
+            sudo cat <<EOF > .htaccess
+            # BEGIN WordPress
+            <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteCond %{HTTP:Authorization} ^(.*)
+            RewriteRule ^(.*) - [E=HTTP_AUTHORIZATION:%1]
+            RewriteBase /
+            RewriteRule ^index\.php$ - [L]
+            RewriteCond %{REQUEST_FILENAME} !-f
+            RewriteCond %{REQUEST_FILENAME} !-d
+            RewriteRule . /index.php [L]
+            </IfModule>
+            # END WordPress
+            EOF
+            sed -i 's/AllowOverride None/AllowOverride All/g' /etc/httpd/conf/httpd.conf
+
+            wget https://downloads.wordpress.org/plugin/jwt-authentication-for-wp-rest-api.zip
+            yum -y install unzip
+            unzip jwt-authentication-for-wp-rest-api.zip -d jwt-authentication-for-wp-rest-api
+            cp -r ./jwt-authentication-for-wp-rest-api/jwt-authentication-for-wp-rest-api /var/www/html/wp-content/plugins
+            rm -rf jwt-authentication-for-wp-rest-api.zip
+            rm -rf jwt-authentication-for-wp-rest-api
+            wget https://gitee.com/qin-yangming/open-tools/raw/master/wp-cli.phar
+            chmod +x wp-cli.phar
+            mv wp-cli.phar /usr/local/bin/wp
+
+            SECRET_KEY=$(openssl rand -base64 32) && sed -i "/Database settings/i define('JWT_AUTH_SECRET_KEY', '$SECRET_KEY');\ndefine('JWT_AUTH_CORS_ENABLE', true);\n" /var/www/html/wp-config.php
+            sed -i 's/\r$//' /var/www/html/wp-config.php
+            wp core install --url=${url} --title="Hello World" --admin_user=${wordpress_user_name} --admin_password=${wordpress_user_password} --admin_email=${wordpress_user_email} --skip-email --allow-root
+
+            wp plugin activate jwt-authentication-for-wp-rest-api --allow-root --path=/var/www/html
+
+            systemctl restart httpd
+          - db_connection:
+              Fn::GetAtt:
+                - RdsDBInstance
+                - InnerConnectionString
+            db_username:
+              Ref: DBUser
+            db_password:
+              Ref: DBPassword
+            db_name:
+              Ref: DBName
+            url:
+              Fn::Select:
+                - 0
+                - Fn::GetAtt:
+                    - EcsInstance
+                    - PublicIps
+            wordpress_user_name:
+              Ref: WordPressUserName
+            wordpress_user_password:
+              Ref: WordPressUserPassword
+            wordpress_user_email:
+              Ref: WordPressUserEmail
+      InstanceIds:
+        Fn::GetAtt:
+          - EcsInstance
+          - InstanceIds
+    DependsOn:
+      - RdsAccountPrivilege
+  RdsDBInstance:
+    Type: ALIYUN::RDS::DBInstance
+    Properties:
+      ZoneId:
+        Ref: ZoneId
+      VpcId:
+        Fn::If:
+          - CreateVpcConditions
+          - Ref: EcsVpc
+          - Ref: VpcId
+      VSwitchId:
+        Fn::If:
+          - CreateVpcConditions
+          - Ref: EcsVSwitch
+          - Ref: VSwitchId
+      DBInstanceClass:
+        Ref: DBInstanceClass
+      DBInstanceStorage: 50
+      Engine: MySQL
+      EngineVersion: '8.0'
+      Category: HighAvailability
+      DBInstanceStorageType: cloud_essd
+      SecurityIPList: 0.0.0.0/0
+  RdsDatabase:
+    Type: ALIYUN::RDS::Database
+    Properties:
+      DBInstanceId:
+        Ref: RdsDBInstance
+      CharacterSetName: utf8mb4
+      DBName:
+        Ref: DBName
+  RdsAccount:
+    Type: ALIYUN::RDS::Account
+    Properties:
+      AccountName:
+        Ref: DBUser
+      AccountType: Normal
+      AccountPassword:
+        Ref: DBPassword
+      DBInstanceId:
+        Ref: RdsDBInstance
+  RdsAccountPrivilege:
+    Type: ALIYUN::RDS::AccountPrivilege
+    Properties:
+      AccountPrivilege: ReadWrite
+      DBInstanceId:
+        Ref: RdsDBInstance
+      DBName:
+        Ref: DBName
+      AccountName:
+        Ref: RdsAccount
+Outputs:
+  Url:
+    Description:
+      en: Wordpress url
+      zh-cn: Wordpress 博客访问地址
+    Value:
+      Fn::Sub:
+        - http://${IP}/wp-admin
+        - IP:
+            Fn::Select:
+              - 0
+              - Fn::GetAtt:
+                  - EcsInstance
+                  - PublicIps
+Metadata:
+  ALIYUN::ROS::Interface:
+    ParameterGroups:
+      - Parameters:
+          - PayType
+          - PayPeriodUnit
+          - PayPeriod
+        Label:
+          default: 付费类型配置
+      - Parameters:
+          - EcsInstanceType
+          - InternetChargeType
+          - InternetMaxBandwidthOut
+          - SystemDiskCategory
+          - SystemDiskSize
+          - InstancePassword
+        Label:
+          default: 服务器基础配置
+      - Parameters:
+          - DBInstanceClass
+          - DBName
+          - DBUser
+          - DBPassword
+        Label:
+          default:
+            en: RDS
+            zh-cn: RDS配置
+      - Parameters:
+          - WordPressUserName
+          - WordPressUserPassword
+          - WordPressUserEmail
+        Label:
+          default:
+            en: WordPress
+            zh-cn: WordPress配置
+      - Parameters:
+          - ZoneId
+          - VpcOption
+          - VpcId
+          - VSwitchId
+          - VpcCidrBlock
+          - VSwitchCidrBlock
+        Label:
+          default: 配置专有网络
+    QuickDeployConfig:
+      PackageFields:
+        - Key: EcsInstanceType
+        - Key: DBInstanceClass
+        - Key: SystemDiskCategory
+          Label:
+            zh-cn: 系统盘
+            en: System Disk
+          Value: '${SystemDiskCategory} / ${SystemDiskSize} GB'
+        - Key: InternetChargeType
+          Label:
+            zh-cn: 公网带宽
+            en: Internet Charge Type
+          Value: '${InternetChargeType } / ${InternetMaxBandwidthOut} Mbps'
+        - Key: PayType
+          Label:
+            zh-cn: 付费类型
+            en:  Pay Type
+          Value: '${PayType}'
+        - Key: PayPeriodUnit
+          Label:
+            zh-cn: 付费时长
+            en: Pay Period
+          Value: '${PayPeriod} ${PayPeriodUnit}'
+      PredefinedParameters:
+        - Name: 热卖套餐，特价99元/年（限购1台）
+          Parameters:
+            EcsInstanceType: ecs.e-c1m1.large
+            SystemDiskCategory: cloud_essd_entry
+            SystemDiskSize: 40
+            InternetChargeType: PayByBandwidth
+            InternetMaxBandwidthOut: 3
+            PayPeriodUnit: Month
+            PayPeriod: 12
+            PayType: PrePaid
+            DBInstanceClass: rds.mysql.t1.small
+          OrderList:
+            - EcsInstanceType
+            - SystemDiskCategory
+            - SystemDiskSize
+            - InternetChargeType
+            - InternetMaxBandwidthOut
+            - PayPeriodUnit
+            - PayPeriod
+            - PayType
+            - DBInstanceClass
+          Type: Normal
+          Description: 固定带宽不限流量，新老同享，上云首选！
+        - Name: 尝鲜套餐，只需0.3元/小时
+          Parameters:
+            EcsInstanceType: ecs.e-c1m1.large
+            SystemDiskCategory: cloud_essd_entry
+            SystemDiskSize: 40
+            InternetChargeType: PayByBandwidth
+            InternetMaxBandwidthOut: 3
+            PayPeriodUnit: Month
+            PayPeriod: 12
+            PayType: PostPaid
+            DBInstanceClass: rds.mysql.t1.small
+          OrderList:
+            - EcsInstanceType
+            - SystemDiskCategory
+            - SystemDiskSize
+            - InternetChargeType
+            - InternetMaxBandwidthOut
+            - PayPeriodUnit
+            - PayPeriod
+            - PayType
+            - DBInstanceClass
+          Type: Normal
+          Description: 可用300元学生专属代金券抵扣！<a href="https://university.aliyun.com" target="_blank">立即领取</a>
+        - Name: 自定义套餐
+          Parameters: {}
+          OrderList:
+            - EcsInstanceType
+            - SystemDiskCategory
+            - SystemDiskSize
+            - InternetChargeType
+            - InternetMaxBandwidthOut
+            - PayPeriodUnit
+            - PayPeriod
+            - PayType
+            - DBInstanceClass
+          Type: Custom
+      CustomFields:
+        - Key: InstancePassword
+        - Key: DBName
+        - Key: DBUser
+        - Key: DBPassword
+        - Key: WordPressUserName
+        - Key: WordPressUserPassword
+        - Key: WordPressUserEmail
+      CostRelatedKeys:
+        - RegionId
+        - PayPeriod
+      AutomaticZone:
+        ZoneIdKey: ZoneId
